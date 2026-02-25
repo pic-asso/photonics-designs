@@ -1,0 +1,39 @@
+# --- PIC Design Repository ---
+#
+# This repo contains your actual design work (scripts, notebooks, plots, reports).
+# Infrastructure (tools, setup, Claude commands) lives in the companion template:
+# https://github.com/pic-asso/photonics-workstation
+
+# 1. PDK & Foundry Data (NDA — never commit)
+pdk-info/*
+!pdk-info/.gitkeep
+drc-rules/*
+!drc-rules/.gitkeep
+
+# 2. Layouts (binary / proprietary — never commit)
+layout/**/*.gds
+layout/**/*.oas
+layout/**/*.lyrdb
+!layout/.gitkeep
+
+# 3. Tapeout packages (NDA)
+tapeout/*
+!tapeout/.gitkeep
+
+# 4. Raw simulation data (large binary — never commit)
+analysis/simulation/*
+!analysis/simulation/.gitkeep
+
+# 5. Python & Environment
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+.env
+
+# 6. KLayout & Tool Artifacts
+*.log
+*.tmp
+.lysession
+temp_*.lydrc

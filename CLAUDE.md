@@ -1,0 +1,1 @@
+@../photonics-workstation/CLAUDE.md
