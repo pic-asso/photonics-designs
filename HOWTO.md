@@ -128,10 +128,10 @@ Provide all three sources together:
 2. **The paper itself** (for context Claude may have missed)
 3. **Layout or schematic figures from the paper** — this is the most underused input
 
-The JSON gives Claude *numbers*. The figures give Claude *topology*: which port is the
-through port, whether there is an S-bend input, whether the coupler is symmetric, where tapers
-start and end, how the device connects to the rest of the circuit. A figure eliminates entire
-categories of geometric assumption.
+The JSON gives Claude *numbers*. The figures give Claude *topology*: which port is which,
+how the waveguides enter and exit, where transitions and tapers start and end, how the device
+connects to the rest of the circuit. A figure eliminates entire categories of geometric
+assumption.
 
 Useful figure types to provide:
 - Schematic diagrams (clearest for topology)
@@ -151,7 +151,7 @@ code is written than after. Only approve Stage 1 when you are satisfied with the
 
 After receiving the code (Stage 2), **open the GDS in KLayout before approving**. Verify:
 - Port positions and orientations match the paper figure
-- Coupling region geometry looks correct
+- Critical geometry regions match the paper figures
 - No obvious dimensional errors (scale the ruler against the paper)
 
 The output is always a parametric `@gf.cell`. Later phases (compact modelling, parameter
