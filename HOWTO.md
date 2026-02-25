@@ -43,10 +43,46 @@ claude
 `@../photonics-workstation/CLAUDE.md` import. Approve it. This gives Claude all the
 behavioural rules (DRC discipline, simulation cost gates, file naming conventions, etc.).
 
-**Brief Claude at the start of each session.** A short context message goes a long way:
+**Brief Claude at the start of each session.** A short context message goes a long way.
+Always start with an explicit no-action line, then fill in the slots below:
 
-> "I'm reproducing the bent directional coupler from [Author et al., 2023]. The target
-> wavelength is 1550 nm. I've already extracted parameters — picking up from the layout stage."
+```
+This is a project briefing only. Do not begin any workflow step until I invoke the
+relevant slash command.
+
+Device: [what you are designing and from which paper/source]
+Starting point: [which slash command you are about to run, e.g. /extract-paper]
+Wavelength: [target wavelength(s)]
+Key fixed parameters: [any dimensions or constraints already decided]
+Phase plan:
+  Phase 1 — [label]: [commands, e.g. /extract-paper → /paper-to-layout → /drc-assistant]
+  Phase 2 — [label]: [commands, e.g. /component-sim]
+  ...
+Open questions: [anything to resolve during /extract-paper before proceeding]
+```
+
+The no-action line is critical — without it Claude may start fetching the paper or
+suggesting code as soon as it reads the message.
+
+Concrete example of a well-formed briefing:
+
+> This is a project briefing only. Do not begin any workflow step until I invoke the
+> relevant slash command.
+>
+> I am reproducing the bent directional coupler from arxiv.org/html/2404.06117v1,
+> starting from scratch with `/extract-paper`. Target wavelength: 1310 nm. For all
+> layout dimensions, use the values stated in each figure's caption; where a figure
+> caption does not specify the bend radius, default to 25 µm.
+>
+> **Phase 1 — Layout:** `/extract-paper` → `/paper-to-layout` → `/drc-assistant`
+> **Phase 2 — Simulation:** Reproduce target figures for both gap values using
+> `/component-sim`. Use `/corner-analysis` only if `/extract-paper` confirms a figure
+> shows fabrication tolerance sensitivity.
+> **Phase 3 — Compact model:** SAX S-parameter model via `/circuit-sim`.
+> **Phase 4 — Report:** `/generate-report`
+>
+> Open questions to resolve during `/extract-paper`: whether any figure shows
+> fabrication tolerance sensitivity (determines if `/corner-analysis` is needed).
 
 Claude does not retain memory between sessions beyond what is in `MEMORY.md`. Any in-progress
 state, decisions made, or partial results from a previous session should be re-stated.
@@ -81,13 +117,14 @@ no quote, Claude invented it.** Challenge those before proceeding.
   *"Dimensions are in Table 1 and Fig. 3b. The fabrication tolerances are in Section III."*
 - After receiving the JSON, read every value and verify the units.
 - Ask Claude to list any values it was uncertain about or had to infer.
-- Do not pass the JSON to `/paper-to-layout` until it is correct.
+- The verified JSON is automatically saved to `designs/[component_name]/params_[ComponentName]_YYYYMMDD_HHMM.json`. Confirm the path Claude reports before proceeding.
+- Do not invoke `/paper-to-layout` until the saved JSON is correct — it reads directly from that file.
 
 ### `/paper-to-layout`
 
 Provide all three sources together:
 
-1. **The verified parameter JSON** from `/extract-paper`
+1. **The saved parameter JSON** — Claude reads it from `designs/[component_name]/params_[ComponentName]_YYYYMMDD_HHMM.json` automatically. Just confirm the file path.
 2. **The paper itself** (for context Claude may have missed)
 3. **Layout or schematic figures from the paper** — this is the most underused input
 
@@ -110,6 +147,9 @@ After receiving the GDSFactory script, **open the GDS in KLayout before approvin
 - Coupling region geometry looks correct
 - No obvious dimensional errors (scale the ruler against the paper)
 
+The output is always a parametric `@gf.cell`. Later phases (compact modelling, parameter
+sweeps) reuse this cell — they do not regenerate it.
+
 ### `/component-sim`
 
 State your objectives explicitly before Claude writes any code:
@@ -126,6 +166,13 @@ The simulation script will always include a cost estimate and a `y/n` gate befor
 submission. Do not bypass it.
 
 ### `/corner-analysis`
+
+This command is for **fabrication process corners only** — unintentional manufacturing
+variation such as ±Δwidth, ±Δthickness, ±etch depth. It answers "how robust is the
+nominal design to process spread?" and maps yield across the corner space.
+
+It is not for intentional design parameter sweeps (geometry, coupling angle, radius,
+gap as design variables). Those belong in `/component-sim` as explicit sweep runs.
 
 Only run this after the nominal simulation result looks physically correct. Corners on a
 broken nominal case are meaningless and waste cloud credits.
@@ -174,6 +221,30 @@ When Claude produces something wrong, be specific:
 | "The simulation is too slow" | "The domain is larger than needed — the coupler is 12 µm long, reduce X padding to 2 µm" |
 
 Specific corrections train the current session. Vague corrections lead to guessing.
+
+---
+
+## Planning a Multi-Phase Design
+
+For projects that go beyond a single nominal simulation — gap sweeps, parameter studies,
+compact models — define the phase structure before starting. This prevents mid-project
+confusion about which commands belong to which stage and avoids redoing layout work.
+
+A typical multi-phase breakdown:
+
+| Phase | Goal | Commands |
+|---|---|---|
+| Layout | Extract parameters, generate and verify GDS | `/extract-paper` → `/paper-to-layout` → `/drc-assistant` |
+| Simulation | Reproduce target figures, run parameter sweeps | `/component-sim`, optionally `/corner-analysis` |
+| Compact model | Build SAX S-parameter model for circuit use | `/circuit-sim` |
+| Report | Collect all artefacts, write executive report | `/generate-report` |
+
+Not every project needs all four phases. Skip what does not apply, but always complete
+a phase fully before starting the next — a compact model built on unverified simulation
+results is worthless.
+
+Include the phase plan in your session briefing (see *Starting a Session*) so Claude
+understands the full scope from the first message.
 
 ---
 

@@ -50,8 +50,10 @@ photonics-designs/
 │
 ├── CLAUDE.md                   # Imports rules from ../photonics-workstation/CLAUDE.md
 │
-├── designs/                    # GDSFactory component scripts (tracked)
-│   └── [component_name].py
+├── designs/                    # GDSFactory component scripts and extracted parameters (tracked)
+│   └── [component_name]/
+│       ├── [component_name].py
+│       └── params_[ComponentName]_YYYYMMDD_HHMM.json
 │
 ├── notebooks/                  # Jupyter design notebooks (tracked)
 │
@@ -78,7 +80,8 @@ All outputs use `[component_name]` (snake_case) subfolders so `/generate-report`
 
 | Output type | Path | Naming pattern |
 |---|---|---|
-| Design scripts | `designs/` | `[component_name].py` |
+| Design scripts | `designs/[component_name]/` | `[component_name].py` |
+| Extracted parameters | `designs/[component_name]/` | `params_[ComponentName]_YYYYMMDD_HHMM.json` |
 | GDS layouts | `layout/[component_name]/` | `[ComponentName]_YYYYMMDD_HHMM.gds` |
 | DRC markers | `layout/[component_name]/` | `[ComponentName]_YYYYMMDD_HHMM.lyrdb` |
 | Raw sim data | `analysis/simulation/[component_name]/` | `sim_[ComponentName]_[Timestamp].[ext]` |
