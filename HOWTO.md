@@ -141,14 +141,35 @@ Useful figure types to provide:
 Also tell Claude explicitly:
 - Which foundry layer names to use (e.g. `WG`, `M1` if your PDK uses uppercase)
 - Whether you need a standalone cell or a sub-cell to be assembled into a larger circuit
+- Any hard port constraints (e.g. "inputs and outputs must exit at 0°/180°")
+- Known contradictions or gaps in the paper — list them upfront so they appear in Stage 1
 
-After receiving the GDSFactory script, **open the GDS in KLayout before approving**. Verify:
+**This command runs in two stages.** Claude will output a layout strategy and assumptions
+first, then stop and ask for approval before writing any code. Use Stage 1 to catch
+geometric assumptions and resolve open questions — it is much cheaper to fix these before
+code is written than after. Only approve Stage 1 when you are satisfied with the strategy.
+
+After receiving the code (Stage 2), **open the GDS in KLayout before approving**. Verify:
 - Port positions and orientations match the paper figure
 - Coupling region geometry looks correct
 - No obvious dimensional errors (scale the ruler against the paper)
 
 The output is always a parametric `@gf.cell`. Later phases (compact modelling, parameter
 sweeps) reuse this cell — they do not regenerate it.
+
+Example invocation:
+
+> `/paper-to-layout` — component is `bent_dc`. Paper: [attach PDF]. Screenshots of
+> schematic and SEM figures attached.
+>
+> Known ambiguities to resolve in Stage 1:
+> - Table 1 states device length 27.5 µm — unclear whether this is consistent with
+>   the geometry in Figure 3 or a separate measurement.
+> - No port pitch is given — needs to be inferred from the SEM or assumed.
+> - Bend geometry details appear only in the Figure 1 caption; no dedicated section.
+>
+> Constraints:
+> - Input and output ports must exit at 0°/180° (horizontal).
 
 ### `/component-sim`
 
