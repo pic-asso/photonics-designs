@@ -21,9 +21,10 @@ The recommended sequence:
 4.  ↓ lock objectives  → agree on metrics, wavelength range, pass/fail criteria
 5. /component-sim      → review cost estimate, then approve
 6. /corner-analysis    → only if nominal sim looks correct
-7. /circuit-sim        → system-level validation
-8. /drc-assistant      → Tier-1 during iteration, Tier-2 before tapeout
-9. /generate-report    → only after all artefacts exist on disk
+7. /parametric-opt     → optimise parameters to meet spec, using existing sim data
+8. /circuit-sim        → system-level validation
+9. /drc-assistant      → Tier-1 during iteration, Tier-2 before tapeout
+10. /generate-report   → only after all artefacts exist on disk
 ```
 
 Never skip the confirmation steps between stages.
@@ -200,6 +201,28 @@ broken nominal case are meaningless and waste cloud credits.
 
 Specify the fabrication tolerance assumptions explicitly — do not let Claude guess them:
 - *"Use ±20 nm width variation and ±10 nm thickness variation based on our foundry spec."*
+
+### `/parametric-opt`
+
+Run this after you have simulation data and want to find the parameter set that best meets
+a performance target. The command reuses existing data from
+`analysis/simulation/[component_name]/` before proposing new simulation runs.
+
+State the following explicitly before invoking:
+
+- Which parameters to vary and their bounds:
+  *"Sweep radius from 15–35 µm and coupling angle from 20–50°."*
+- The optimisation target and pass/fail criteria:
+  *"Coupling ratio > 45 % across 1280–1340 nm, minimise insertion loss."*
+- Any parameters that must stay fixed.
+
+The command runs in two stages. Stage 1 inventories the existing simulation data and
+presents the optimisation plan — check that the parameter space coverage is adequate
+before approving. If gaps need filling, the cost estimate appears here. Only proceed to
+Stage 2 once you are satisfied.
+
+After Stage 2, run `/drc-assistant` to verify the optimised geometry is still
+fabrication-compliant — optimisation can push parameters to values that violate DRC.
 
 ### `/drc-assistant`
 
