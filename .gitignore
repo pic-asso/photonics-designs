@@ -37,3 +37,9 @@ env/
 *.tmp
 .lysession
 temp_*.lydrc
+
+# 7. Regenerable derived content (local only, not tracked)
+*.ipynb
+.ipynb_checkpoints/
+*.html
+plots/
